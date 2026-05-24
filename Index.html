@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Giganto Reads!</title>
+<link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g:#22c55e;--gd:#15803d;--gl:#dcfce7;
+  --b:#38bdf8;--bd:#0284c7;--bl:#e0f2fe;
+  --y:#fde047;--yd:#ca8a04;
+  --r:#f87171;--rd:#dc2626;--rl:#fee2e2;
+  --p:#c084fc;--pd:#7c3aed;--pl:#f3e8ff;
+  --ink:#1e1b4b;--card:#fff;--mist:#f0fdf4;
+  --rad:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Nunito',sans-serif;background:var(--mist);height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* BG */
+.bg{position:fixed;inset:0;z-index:0;background:linear-gradient(160deg,#bbf7d0,#dcfce7 50%,#bae6fd);overflow:hidden;pointer-events:none;}
+.sun{position:absolute;width:80px;height:80px;border-radius:50%;background:radial-gradient(#fde047,#fbbf24);top:8px;right:14px;box-shadow:0 0 40px 12px rgba(253,224,71,.4);animation:sunP 4s ease-in-out infinite;}
+@keyframes sunP{0%,100%{transform:scale(1);}50%{transform:scale(1.07);}}
+
+/* SHELL */
+#app{position:relative;z-index:1;display:flex;flex-direction:column;height:100dvh;overflow:hidden;}
+.screen{display:none;flex-direction:column;align-items:center;height:100dvh;padding:10px 14px 18px;overflow-y:auto;animation:sUp .3s cubic-bezier(.34,1.3,.64,1) both;}
+.screen.active{display:flex;}
+@keyframes sUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* SETUP */
+.setup{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:24px;gap:14px;text-align:center;}
+.setup h1{font-family:'Boogaloo',cursive;font-size:2rem;color:var(--ink);}
+.setup p{font-size:.82rem;color:#475569;font-weight:700;line-height:1.55;}
+.setup a{color:var(--bd);}
+.api-in{width:100%;padding:13px;border:3px solid var(--b);border-radius:var(--rad);font-size:.9rem;font-family:'Nunito',sans-serif;font-weight:700;outline:none;background:white;}
+.errmsg{color:var(--rd);font-size:.78rem;font-weight:800;min-height:1.1em;}
+
+/* HOME */
+.dino-img{flex-shrink:0;animation:dFloat 3s ease-in-out infinite;}
+@keyframes dFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.h-title{font-family:'Boogaloo',cursive;font-size:2.3rem;color:var(--ink);text-align:center;margin:2px 0 0;text-shadow:2px 3px 0 rgba(0,0,0,.07);}
+.h-sub{font-size:.75rem;color:#64748b;font-weight:800;margin-bottom:7px;}
+
+/* growth card */
+.gcard{background:var(--card);border-radius:var(--rad);padding:9px 13px;width:100%;box-shadow:0 5px 0 rgba(0,0,0,.07);margin-bottom:7px;flex-shrink:0;}
+.glbl{font-weight:800;font-size:.74rem;color:var(--gd);margin-bottom:4px;display:flex;justify-content:space-between;}
+.gbar{height:10px;background:var(--gl);border-radius:10px;overflow:hidden;}
+.gfill{height:100%;background:linear-gradient(90deg,var(--g),var(--b));border-radius:10px;transition:width .8s cubic-bezier(.34,1.3,.64,1);}
+.gsub{font-size:.63rem;color:#94a3b8;font-weight:700;margin-top:3px;text-align:center;}
+
+/* letter pills with hit counter */
+.pills-lbl{font-family:'Boogaloo',cursive;font-size:.88rem;color:var(--ink);width:100%;margin-bottom:3px;}
+.pills{display:flex;flex-wrap:wrap;gap:4px;width:100%;margin-bottom:7px;}
+.lpill{position:relative;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Boogaloo',cursive;font-size:1.1rem;border:3px solid transparent;cursor:pointer;flex-shrink:0;}
+.lpill.locked{background:#e2e8f0;color:#94a3b8;border-color:#e2e8f0;pointer-events:none;}
+.lpill.introduced{background:#fef9c3;color:var(--yd);border-color:var(--y);}
+.lpill.learning{background:var(--bl);color:var(--bd);border-color:var(--b);}
+.lpill.mastered{background:var(--gl);color:var(--gd);border-color:var(--g);}
+.pill-hits{position:absolute;bottom:1px;right:1px;font-size:.45rem;font-weight:800;color:rgba(0,0,0,.4);line-height:1;}
+
+/* mode buttons */
+.mbtn{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:var(--rad);padding:10px 13px;width:100%;box-shadow:0 5px 0 rgba(0,0,0,.09);border:3px solid var(--g);cursor:pointer;margin-bottom:7px;transition:transform .1s,box-shadow .1s;text-align:left;}
+.mbtn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.09);}
+.mbtn img.mico{width:36px;height:36px;flex-shrink:0;}
+.mbtn .mt{font-family:'Boogaloo',cursive;font-size:.97rem;color:var(--ink);}
+.mbtn .ms{font-size:.64rem;color:#64748b;font-weight:700;}
+.mbtn.locked-mode{opacity:.32;pointer-events:none;}
+.mbtn.full{background:var(--ink);border-color:var(--ink);box-shadow:0 5px 0 #0f0c29;}
+.mbtn.full .mt,.mbtn.full .ms{color:white;}
+
+/* GAME CHROME */
+.ghdr{display:flex;align-items:center;gap:7px;width:100%;margin-bottom:5px;flex-shrink:0;}
+.bbtn{background:var(--card);border:none;border-radius:50%;width:36px;height:36px;font-size:.95rem;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bbtn:active{transform:translateY(2px);}
+.gtitle{font-family:'Boogaloo',cursive;font-size:1.05rem;color:var(--ink);flex:1;}
+.spill{background:var(--y);color:var(--ink);font-weight:800;font-size:.76rem;border-radius:20px;padding:3px 9px;box-shadow:0 3px 0 var(--yd);flex-shrink:0;}
+
+/* progress dots */
+.pdots{display:flex;gap:6px;justify-content:center;margin-bottom:7px;flex-shrink:0;}
+.pdot{width:12px;height:12px;border-radius:50%;border:2px solid #cbd5e1;background:#e2e8f0;transition:all .3s;}
+.pdot.done{background:var(--y);border-color:var(--yd);}
+.pdot.curr{background:var(--g);border-color:var(--gd);}
+
+/* SPEAKER */
+.spk{width:90px;height:90px;border-radius:50%;border:none;cursor:pointer;flex-shrink:0;
+  background:linear-gradient(135deg,var(--g),var(--b));
+  box-shadow:0 7px 0 var(--gd),0 0 0 4px white,0 0 0 7px var(--g);
+  font-size:2.2rem;display:flex;align-items:center;justify-content:center;
+  transition:transform .1s,box-shadow .1s;
+  animation:spkP 3s ease-in-out infinite;margin:3px auto;}
+.spk:active{transform:scale(.93);}
+.spk:disabled{opacity:.55;cursor:not-allowed;animation:none;}
+@keyframes spkP{0%,100%{box-shadow:0 7px 0 var(--gd),0 0 0 4px white,0 0 0 7px var(--g);}50%{box-shadow:0 7px 0 var(--gd),0 0 0 4px white,0 0 0 13px rgba(34,197,94,.28);}}
+.spk.on{animation:spkB .35s ease-in-out infinite alternate;}
+@keyframes spkB{from{transform:scale(1);}to{transform:scale(1.1);}}
+.hint{font-size:.7rem;color:#94a3b8;font-weight:800;text-align:center;margin:2px 0 5px;animation:hintP 2s ease-in-out infinite;}
+@keyframes hintP{0%,100%{opacity:.35;}50%{opacity:1;}}
+
+/* SOUND STATION — letter card */
+.lcard-outer{display:flex;flex-direction:column;align-items:center;gap:5px;margin-bottom:5px;flex-shrink:0;transition:opacity .4s;}
+.lcard{background:var(--card);border-radius:20px;padding:12px 18px;box-shadow:0 8px 0 rgba(0,0,0,.08);border:4px solid var(--g);display:flex;align-items:center;gap:10px;}
+.lcard-L{font-family:'Boogaloo',cursive;font-size:4.2rem;color:var(--ink);line-height:1;}
+.lcard-img{width:60px;height:60px;}
+.lcard-kw{font-family:'Boogaloo',cursive;font-size:.83rem;color:#64748b;}
+
+/* TILES — letter answer */
+.tgrid{display:grid;gap:9px;width:100%;}
+.g2{grid-template-columns:1fr 1fr;}
+.g4{grid-template-columns:1fr 1fr;}
+
+.ltile{background:var(--card);border-radius:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:9px 5px;gap:3px;box-shadow:0 6px 0 #d1d5db;border:3px solid #e5e7eb;min-height:82px;transition:transform .1s,box-shadow .1s;}
+.ltile:active{transform:translateY(4px);box-shadow:0 2px 0 #d1d5db;}
+.ltile .lL{font-family:'Boogaloo',cursive;font-size:2.4rem;color:var(--ink);line-height:1;}
+.ltile img{width:40px;height:40px;}
+.ltile.correct{background:var(--gl);border-color:var(--gd);box-shadow:0 6px 0 var(--gd);animation:wig .4s ease;}
+.ltile.wrong{background:var(--rl);border-color:var(--rd);box-shadow:0 6px 0 var(--rd);animation:shk .4s ease;}
+.ltile.disabled{opacity:.35;pointer-events:none;}
+
+/* TILES — picture answer */
+.ptile{background:var(--card);border-radius:15px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;border:3px solid #e5e7eb;box-shadow:0 6px 0 #d1d5db;min-height:90px;transition:transform .1s,box-shadow .1s;}
+.ptile:active{transform:translateY(4px);box-shadow:0 2px 0 #d1d5db;}
+.ptile img{width:55px;height:55px;}
+.ptile.correct{background:var(--gl);border-color:var(--gd);box-shadow:0 6px 0 var(--gd);animation:wig .4s;}
+.ptile.wrong{background:var(--rl);border-color:var(--rd);box-shadow:0 6px 0 var(--rd);animation:shk .4s;}
+.ptile.disabled{opacity:.35;pointer-events:none;}
+
+@keyframes wig{0%,100%{transform:rotate(0);}30%{transform:rotate(-7deg);}70%{transform:rotate(7deg);}}
+@keyframes shk{0%,100%{transform:translateX(0);}30%{transform:translateX(-9px);}70%{transform:translateX(9px);}}
+
+/* BLEND boxes */
+.bboxes{display:flex;gap:7px;justify-content:center;margin:4px 0;flex-wrap:wrap;}
+.bbox{width:54px;height:60px;background:var(--card);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Boogaloo',cursive;font-size:2rem;color:var(--ink);box-shadow:0 5px 0 #cbd5e1;border:3px solid #e2e8f0;opacity:0;transform:translateY(10px);transition:opacity .3s,transform .3s,background .2s,border-color .2s,box-shadow .2s;}
+.bbox.show{opacity:1;transform:translateY(0);}
+.bbox.lit{background:var(--y);border-color:var(--yd);box-shadow:0 5px 0 var(--yd);transform:scale(1.12) translateY(-4px);}
+
+/* WORD BUILDER tiles */
+.wbtile{background:var(--card);border-radius:15px;padding:9px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:3px solid #e5e7eb;box-shadow:0 6px 0 #d1d5db;min-height:80px;transition:transform .1s,box-shadow .1s,background .12s,border-color .12s,opacity .2s;}
+.wbtile:active{transform:translateY(4px);box-shadow:0 2px 0 #d1d5db;}
+.wbtile .wbL{font-family:'Boogaloo',cursive;font-size:2.2rem;color:var(--ink);line-height:1;}
+.wbtile img{width:38px;height:38px;}
+.wbtile.selected{background:var(--y);border-color:var(--yd);box-shadow:0 6px 0 var(--yd);}
+.wbtile.correct{background:var(--gl);border-color:var(--gd);box-shadow:0 6px 0 var(--gd);animation:wig .4s;}
+.wbtile.wrong{background:var(--rl);border-color:var(--rd);box-shadow:0 6px 0 var(--rd);animation:shk .4s;}
+.wbtile.disabled{opacity:.35;pointer-events:none;}
+
+/* word builder answer slots */
+.wb-slots{display:flex;gap:8px;justify-content:center;margin:5px 0;}
+.wbslot{width:52px;height:58px;border-radius:12px;border:3px dashed #cbd5e1;background:#f8fafc;display:flex;align-items:center;justify-content:center;font-family:'Boogaloo',cursive;font-size:1.9rem;color:var(--ink);transition:all .2s;}
+.wbslot.filled{border-color:var(--g);background:var(--gl);border-style:solid;}
+.wbslot.wrong-slot{border-color:var(--rd);background:var(--rl);animation:shk .4s;}
+.wbslot.correct-slot{border-color:var(--gd);background:var(--gl);}
+
+/* STORY */
+.story-card{background:var(--card);border-radius:var(--rad);padding:13px;width:100%;box-shadow:0 6px 0 rgba(0,0,0,.07);border:3px solid var(--b);flex-shrink:0;}
+.story-pics{display:flex;justify-content:center;gap:5px;margin-bottom:7px;}
+.story-pics img{width:62px;height:62px;}
+.story-text{font-family:'Boogaloo',cursive;font-size:1.45rem;color:var(--ink);text-align:center;line-height:1.85;}
+.sword{display:inline-block;cursor:pointer;border-radius:5px;padding:0 3px;border-bottom:3px solid var(--g);transition:background .15s;}
+.sword.lit{background:var(--y);}
+.snav{display:flex;gap:7px;width:100%;margin-top:7px;}
+
+/* ACTION BUTTONS */
+.abtn{width:100%;padding:12px;border:none;border-radius:15px;font-family:'Boogaloo',cursive;font-size:1.08rem;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.11);transition:transform .1s,box-shadow .1s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.abtn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.11);}
+.abtn.green{background:var(--g);color:white;box-shadow:0 5px 0 var(--gd);}
+.abtn.blue{background:var(--b);color:var(--ink);box-shadow:0 5px 0 var(--bd);}
+.abtn.yellow{background:var(--y);color:var(--ink);box-shadow:0 5px 0 var(--yd);}
+.abtn.dark{background:var(--ink);color:white;box-shadow:0 5px 0 #0f0c29;}
+.abtn.purple{background:var(--p);color:white;box-shadow:0 5px 0 var(--pd);}
+
+/* RESULT */
+.result-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:22px;text-align:center;}
+.r-dino{width:100px;height:100px;margin:0 auto 8px;animation:dFloat 2s ease-in-out infinite;}
+.r-title{font-family:'Boogaloo',cursive;font-size:2.1rem;color:var(--ink);}
+.r-stars{font-size:1.9rem;margin:6px 0;}
+.r-sub{font-size:.85rem;color:#475569;font-weight:700;margin-bottom:16px;}
+
+/* CONFETTI */
+.cf-wrap{position:fixed;inset:0;pointer-events:none;z-index:99;overflow:hidden;}
+.cfp{position:absolute;top:-30px;animation:cfall linear forwards;}
+@keyframes cfall{to{transform:translateY(110vh) rotate(540deg);opacity:0;}}
+
+/* FEEDBACK */
+.fb{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:50;pointer-events:none;opacity:0;transition:opacity .12s;}
+.fb.show{opacity:1;}
+.fb img{width:85px;height:85px;animation:fbpop 1s ease forwards;}
+@keyframes fbpop{0%{transform:scale(.3);}30%{transform:scale(1.5);}60%{transform:scale(1.1);}100%{transform:scale(1.7);opacity:0;}}
+
+/* EVOLVE MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:80;display:none;align-items:center;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--card);border-radius:22px;padding:20px 16px;text-align:center;max-width:270px;width:90%;animation:sUp .4s cubic-bezier(.34,1.3,.64,1);}
+.modal h2{font-family:'Boogaloo',cursive;font-size:1.5rem;color:var(--gd);margin:7px 0 4px;}
+.modal p{font-size:.8rem;color:#475569;font-weight:700;margin-bottom:12px;}
+.modal img{width:76px;height:76px;margin:0 auto;}
+
+.spacer{flex:1;}
+</style>
+</head>
+<body>
+<div class="bg"><div class="sun"></div></div>
+<div class="cf-wrap" id="cfWrap"></div>
+<div class="fb" id="fb"><img id="fbImg" src="" alt=""></div>
+<div class="modal-bg" id="evolveModal">
+  <div class="modal">
+    <img id="modalDino" src="" alt="">
+    <h2 id="modalTitle">Giganto grew!</h2>
+    <p id="modalMsg">New letters unlocked!</p>
+    <button class="abtn green" onclick="closeModal()">ROAR! 🦖</button>
+  </div>
+</div>
+
+<div id="app">
+
+<!-- SETUP -->
+<div class="screen active" id="setupScreen">
+  <div class="setup">
+    <img src="https://openmoji.org/data/color/svg/1F995.svg" style="width:80px;height:80px;" alt="">
+    <h1>Giganto Reads! 🦖</h1>
+    <p>This app needs a Google Cloud API key to speak letter sounds correctly.<br><br>
+    <a href="https://console.cloud.google.com" target="_blank">Get a free key at Google Cloud →</a><br><br>
+    Steps: Create project → Enable "Cloud Text-to-Speech API" → APIs &amp; Services → Credentials → Create API Key</p>
+    <input class="api-in" id="apiIn" type="text" placeholder="Paste API key here…" autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="errmsg" id="apiErr"></div>
+    <button class="abtn green" onclick="saveKey()" style="max-width:260px;">Let's go! 🚀</button>
+    <button class="abtn yellow" onclick="skipSetup()" style="max-width:260px;font-size:.85rem;">Use basic voice (no key)</button>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="homeScreen">
+  <img class="dino-img" id="homeDino" src="" alt="Giganto" style="width:100px;height:100px;">
+  <div class="h-title">Giganto Reads!</div>
+  <div class="h-sub">Roar your way to reading 🦖</div>
+
+  <div class="gcard">
+    <div class="glbl"><span id="growLbl">Giganto is in the egg…</span><span id="growPct">0%</span></div>
+    <div class="gbar"><div class="gfill" id="growFill" style="width:0%"></div></div>
+    <div class="gsub" id="growSub">Learn letters to hatch Giganto!</div>
+  </div>
+
+  <div class="pills-lbl">Letters learned:</div>
+  <div class="pills" id="pillsEl"></div>
+
+  <div class="mbtn full" onclick="startFull()">
+    <img class="mico" src="https://openmoji.org/data/color/svg/1F680.svg" alt="">
+    <div><div class="mt">Full Session</div><div class="ms">All activities in one go · ~12 min</div></div>
+  </div>
+  <div class="mbtn" onclick="go('sound')">
+    <img class="mico" src="https://openmoji.org/data/color/svg/1F50A.svg" alt="">
+    <div><div class="mt">Sound Station</div><div class="ms">Hear the sound → find the letter</div></div>
+  </div>
+  <div class="mbtn" onclick="go('blend')" id="blendBtn">
+    <img class="mico" src="https://openmoji.org/data/color/svg/1F442.svg" alt="">
+    <div><div class="mt">What's My Word?</div><div class="ms">Hear sounds blended → pick the picture</div></div>
+  </div>
+  <div class="mbtn" onclick="go('build')" id="buildBtn">
+    <img class="mico" src="https://openmoji.org/data/color/svg/1F9F1.svg" alt="">
+    <div><div class="mt">Word Builder</div><div class="ms">Hear a word → tap its letters in order</div></div>
+  </div>
+  <div class="mbtn" onclick="go('story')" id="storyBtn">
+    <img class="mico" src="https://openmoji.org/data/color/svg/1F4D6.svg" alt="">
+    <div><div class="mt">Story Time</div><div class="ms">Listen and follow along</div></div>
+  </div>
+  <button style="background:none;border:none;font-size:.6rem;color:#94a3b8;cursor:pointer;margin-top:3px;" onclick="resetKey()">⚙ Change API key</button>
+</div>
+
+<!-- SOUND STATION -->
+<div class="screen" id="soundScreen">
+  <div class="ghdr">
+    <button class="bbtn" onclick="goHome()">←</button>
+    <div class="gtitle">🔊 Sound Station</div>
+    <div class="spill" id="soundScore">⭐ 0</div>
+  </div>
+  <div class="pdots" id="soundDots"></div>
+  <!-- Step 1: see the letter -->
+  <div class="lcard-outer" id="lcardOuter">
+    <div class="lcard">
+      <div class="lcard-L" id="soundLetter">S</div>
+      <img class="lcard-img" id="soundKwImg" src="" alt="">
+    </div>
+    <div class="lcard-kw" id="soundKwLbl">…like "snake"</div>
+  </div>
+  <!-- Step 2: hear it -->
+  <button class="spk" id="soundSpk" onclick="soundSpeak()">🔊</button>
+  <div class="hint" id="soundHint">Look at the letter, then tap 🔊!</div>
+  <!-- Step 3: pick it (shown after tap) -->
+  <div class="tgrid g2" id="soundChoices" style="margin-top:7px;"></div>
+  <div class="spacer"></div>
+</div>
+
+<!-- BLEND -->
+<div class="screen" id="blendScreen">
+  <div class="ghdr">
+    <button class="bbtn" onclick="goHome()">←</button>
+    <div class="gtitle">👂 What's My Word?</div>
+    <div class="spill" id="blendScore">⭐ 0</div>
+  </div>
+  <div class="pdots" id="blendDots"></div>
+  <div class="bboxes" id="blendBoxes"></div>
+  <button class="spk" id="blendSpk" onclick="blendSpeak()">🔊</button>
+  <div class="hint">Hear each sound, then tap the picture!</div>
+  <div class="tgrid g4" id="blendChoices" style="margin-top:7px;"></div>
+  <div class="spacer"></div>
+</div>
+
+<!-- WORD BUILDER -->
+<div class="screen" id="buildScreen">
+  <div class="ghdr">
+    <button class="bbtn" onclick="goHome()">←</button>
+    <div class="gtitle">🧱 Word Builder</div>
+    <div class="spill" id="buildScore">⭐ 0</div>
+  </div>
+  <div class="pdots" id="buildDots"></div>
+  <!-- Target picture + word display -->
+  <div style="display:flex;flex-direction:column;align-items:center;gap:5px;margin-bottom:6px;flex-shrink:0;">
+    <img id="buildImg" style="width:80px;height:80px;" src="" alt="">
+  </div>
+  <!-- Answer slots — fill in order -->
+  <div class="wb-slots" id="wbSlots"></div>
+  <button class="spk" id="buildSpk" onclick="buildSpeak()">🔊</button>
+  <div class="hint">Hear the word, then tap its letters in order!</div>
+  <!-- Letter tiles to pick from -->
+  <div class="tgrid g4" id="buildChoices" style="margin-top:7px;"></div>
+  <div class="spacer"></div>
+</div>
+
+<!-- STORY -->
+<div class="screen" id="storyScreen">
+  <div class="ghdr">
+    <button class="bbtn" onclick="goHome()">←</button>
+    <div class="gtitle" id="storyTitle">📖 Story</div>
+    <div class="spill" id="storyPill">1/4</div>
+  </div>
+  <div class="story-card">
+    <div class="story-pics" id="storyPics"></div>
+    <div class="story-text" id="storyText"></div>
+  </div>
+  <div class="hint" style="margin-top:6px;">Tap any word to hear it! 👆</div>
+  <div class="snav">
+    <button class="abtn blue" onclick="readPage()" style="flex:1">🔊 Read to me</button>
+  </div>
+  <div class="snav" style="margin-top:6px;">
+    <button class="abtn yellow" onclick="storyNav(-1)" style="flex:.5" id="prevBtn">← Back</button>
+    <button class="abtn green" onclick="storyNav(1)" style="flex:1" id="nextBtn">Next →</button>
+  </div>
+  <div class="spacer"></div>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="resultScreen">
+  <div class="result-wrap">
+    <img class="r-dino" id="rDino" src="" alt="">
+    <div class="r-title" id="rTitle">Roar! Amazing!</div>
+    <div class="r-stars" id="rStars">⭐⭐⭐</div>
+    <div class="r-sub" id="rSub"></div>
+    <div style="width:100%;max-width:270px;display:flex;flex-direction:column;gap:9px;">
+      <button class="abtn dark" onclick="playAgain()">🔄 Play Again</button>
+      <button class="abtn yellow" onclick="goHome()">🏠 Home</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  OPENMOJI
+// ═══════════════════════════════════════════════════
+function omUrl(e){
+  const pts=[...e].map(c=>c.codePointAt(0).toString(16).toUpperCase().padStart(4,'0'));
+  let code=pts.join('-');
+  if(pts.length===2&&code.endsWith('-FE0F'))code=pts[0];
+  return`https://openmoji.org/data/color/svg/${code}.svg`;
+}
+function setOm(el,e){if(el&&e)el.src=omUrl(e);}
+
+// ═══════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════
+
+// Phoneme data
+// 'tts' = what we send to Google TTS to produce the sound
+// Strategy: use slow speech on a word where the target sound is very prominent at the start
+// We do NOT use IPA <phoneme> tags — they are unreliable on consonants in WaveNet voices
+// Instead: slow rate + the keyword spoken twice with the sound stretched at start
+const PH={
+  s:{tts:'sssnake… sssnake',         kw:'snake',    e:'🐍'},
+  a:{tts:'apple… apple',             kw:'apple',    e:'🍎'},
+  t:{tts:'tap… tap',                 kw:'tap',      e:'🚿'},
+  p:{tts:'pat… pat',                 kw:'pat',      e:'🐾'},
+  i:{tts:'insect… insect',           kw:'insect',   e:'🐛'},
+  n:{tts:'nnnose… nnnose',           kw:'nose',     e:'👃'},
+  c:{tts:'cat… cat',                 kw:'cat',      e:'🐱'},
+  e:{tts:'egg… egg',                 kw:'egg',      e:'🥚'},
+  h:{tts:'hat… hat',                 kw:'hat',      e:'🎩'},
+  r:{tts:'rrrrabbit… rrrrabbit',     kw:'rabbit',   e:'🐰'},
+  m:{tts:'mmmoon… mmmoon',           kw:'moon',     e:'🌙'},
+  d:{tts:'dog… dog',                 kw:'dog',      e:'🐶'},
+  g:{tts:'goat… goat',              kw:'goat',     e:'🐐'},
+  o:{tts:'orange… orange',           kw:'orange',   e:'🍊'},
+  u:{tts:'umbrella… umbrella',       kw:'umbrella', e:'☂️'},
+  l:{tts:'lllion… lllion',           kw:'lion',     e:'🦁'},
+  f:{tts:'fffrog… fffrog',           kw:'frog',     e:'🐸'},
+  b:{tts:'ball… ball',               kw:'ball',     e:'⚽'},
+};
+
+const GROUPS=[
+  {letters:['s','a','t','p']},
+  {letters:['i','n']},
+  {letters:['c','e']},
+  {letters:['h','r']},
+  {letters:['m','d']},
+  {letters:['g','o']},
+  {letters:['u','l']},
+  {letters:['f','b']},
+];
+
+// CVC words — every word must be in a 3-4yo spoken vocabulary
+// g = minimum group index required
+const WORDS=[
+  {w:'tap',  e:'🚿', g:0, s:['t','a','p']},
+  {w:'pat',  e:'🐾', g:0, s:['p','a','t']},
+  {w:'sat',  e:'🪑', g:0, s:['s','a','t']},
+  {w:'nap',  e:'😴', g:1, s:['n','a','p']},
+  {w:'pin',  e:'📌', g:1, s:['p','i','n']},
+  {w:'sit',  e:'🧘', g:1, s:['s','i','t']},
+  {w:'pan',  e:'🍳', g:1, s:['p','a','n']},
+  {w:'ant',  e:'🐜', g:1, s:['a','n','t']},
+  {w:'cat',  e:'🐱', g:2, s:['c','a','t']},
+  {w:'ten',  e:'🔟', g:2, s:['t','e','n']},
+  {w:'net',  e:'🥅', g:2, s:['n','e','t']},
+  {w:'pen',  e:'✏️',  g:2, s:['p','e','n']},
+  {w:'hat',  e:'🎩', g:3, s:['h','a','t']},
+  {w:'hen',  e:'🐔', g:3, s:['h','e','n']},
+  {w:'rat',  e:'🐭', g:3, s:['r','a','t']},
+  {w:'ran',  e:'🏃', g:3, s:['r','a','n']},
+  {w:'map',  e:'🗺️',  g:4, s:['m','a','p']},
+  {w:'man',  e:'🧑', g:4, s:['m','a','n']},
+  {w:'dog',  e:'🐶', g:4, s:['d','o','g']},
+  {w:'mud',  e:'💧', g:4, s:['m','u','d']},
+  {w:'got',  e:'🎁', g:5, s:['g','o','t']},
+  {w:'fog',  e:'🌫️',  g:5, s:['f','o','g']},
+  {w:'log',  e:'🪵', g:5, s:['l','o','g']},
+  {w:'sun',  e:'☀️',  g:6, s:['s','u','n']},
+  {w:'cup',  e:'☕', g:6, s:['c','u','p']},
+  {w:'leg',  e:'🦵', g:6, s:['l','e','g']},
+  {w:'fun',  e:'😄', g:7, s:['f','u','n']},
+  {w:'fan',  e:'💨', g:7, s:['f','a','n']},
+  {w:'bug',  e:'🐛', g:7, s:['b','u','g']},
+  {w:'bed',  e:'🛏️', g:7, s:['b','e','d']},
+  {w:'bat',  e:'🦇', g:7, s:['b','a','t']},
+];
+
+const STORIES=[
+  {title:'Tap, Pat, Sat!', g:0, pages:[
+    {pics:['🚿'],      text:'Tap. Tap. Tap.'},
+    {pics:['🐾'],      text:'Pat. Pat. Pat.'},
+    {pics:['🪑'],      text:'Sat. Sat. Sat.'},
+    {pics:['😄'],      text:'Tap! Pat! Sat! Ha ha!'},
+  ]},
+  {title:'Pip the Ant', g:1, pages:[
+    {pics:['🐜'],      text:'Pip is an ant.'},
+    {pics:['🪑'],      text:'Pip sat.'},
+    {pics:['😴'],      text:'Pip had a nap.'},
+    {pics:['😄'],      text:'Sit up, Pip! Sit!'},
+  ]},
+  {title:'The Cat and the Rat', g:2, pages:[
+    {pics:['🐱'],      text:'The cat sat.'},
+    {pics:['🐭'],      text:'A rat ran.'},
+    {pics:['🐱','🐭'], text:'The cat can see the rat!'},
+    {pics:['🏃'],      text:'The rat ran and ran.'},
+  ]},
+  {title:'Hat on a Hen', g:3, pages:[
+    {pics:['🐔'],      text:'A hen has a hat.'},
+    {pics:['🎩'],      text:'The hat is red.'},
+    {pics:['🐭'],      text:'A rat ran at the hen!'},
+    {pics:['😤'],      text:'Shoo, rat! Shoo!'},
+  ]},
+  {title:'Dad and the Dog', g:4, pages:[
+    {pics:['👨','🐶'], text:'Dad has a dog.'},
+    {pics:['🗺️'],      text:'Dad has a map.'},
+    {pics:['🐶'],      text:'The dog sat on the map.'},
+    {pics:['😄'],      text:'Ha! Sit, dog! Sit!'},
+  ]},
+  {title:'Dog in the Fog', g:5, pages:[
+    {pics:['🌫️'],      text:'A dog sat in the fog.'},
+    {pics:['🪵'],      text:'The dog got a log.'},
+    {pics:['😄'],      text:'The dog ran out of the fog.'},
+    {pics:['😄'],      text:'Fun! Fun! Fun!'},
+  ]},
+  {title:'Fun in the Sun', g:6, pages:[
+    {pics:['☀️'],      text:'The sun is up.'},
+    {pics:['☕'],      text:'Mum has a cup.'},
+    {pics:['🐛'],      text:'A bug ran in the sun.'},
+    {pics:['😄'],      text:'Fun! Fun! Fun!'},
+  ]},
+  {title:'Big Bug in a Bed', g:7, pages:[
+    {pics:['🛏️'],      text:'A big bug sat on the bed.'},
+    {pics:['🦇'],      text:'A bat can see the bug.'},
+    {pics:['😱'],      text:'The bug ran off fast!'},
+    {pics:['😄'],      text:'The bat had fun.'},
+  ]},
+];
+
+const DINO_STAGES=[
+  {e:'🥚', lbl:'Giganto is in the egg…'},
+  {e:'🐣', lbl:'Giganto is hatching!'},
+  {e:'🦕', lbl:'Giganto is a tiny dino!'},
+  {e:'🦖', lbl:'Giganto is growing fast!'},
+  {e:'🦖', lbl:'Giganto is BIG and LOUD!'},
+  {e:'🦖', lbl:'GIGANTO is HUGE! ROAR!'},
+];
+const STAGE_PCT=[0,15,30,50,75,100];
+
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+let API_KEY='', USE_GOOGLE=false;
+let ST={letterStatus:{},unlockedGroup:-1,letterHits:{}};
+
+function loadState(){
+  API_KEY=localStorage.getItem('giganto_key')||'';
+  USE_GOOGLE=!!API_KEY;
+  try{const s=localStorage.getItem('giganto_v4');if(s)ST=JSON.parse(s);}catch(e){}
+  if(ST.unlockedGroup<0){
+    ST.unlockedGroup=0;
+    GROUPS[0].letters.forEach(l=>{ST.letterStatus[l]='introduced';});
+    saveState();
+  }
+}
+function saveState(){try{localStorage.setItem('giganto_v4',JSON.stringify(ST));}catch(e){}}
+function resetKey(){localStorage.removeItem('giganto_key');location.reload();}
+
+// ── SETUP ──
+async function saveKey(){
+  const k=document.getElementById('apiIn').value.trim();
+  if(!k){document.getElementById('apiErr').textContent='Please paste your API key.';return;}
+  document.getElementById('apiErr').textContent='Testing key…';
+  const ok=await gTTS('Hello!',k,true);
+  if(ok){
+    localStorage.setItem('giganto_key',k);
+    API_KEY=k; USE_GOOGLE=true;
+    showScreen('homeScreen'); renderHome();
+  } else {
+    document.getElementById('apiErr').textContent='Key not working. Check the API is enabled and billing is set up.';
+  }
+}
+function skipSetup(){USE_GOOGLE=false;showScreen('homeScreen');renderHome();}
+
+// ═══════════════════════════════════════════════════
+//  AUDIO ENGINE
+//  Key design: playAudio returns a Promise that resolves when audio ENDS
+//  This lets us properly sequence sounds without cutting each other off
+// ═══════════════════════════════════════════════════
+const CACHE={};
+let curAudio=null;
+
+// Google TTS — returns base64 MP3 data URL, or null on failure
+async function gTTS(text, key, testOnly=false){
+  const body={
+    input:{text},
+    // en-GB-Wavenet-D: warm female-ish voice, clear consonants, good for children
+    voice:{languageCode:'en-GB',name:'en-GB-Wavenet-D',ssmlGender:'FEMALE'},
+    audioConfig:{audioEncoding:'MP3',speakingRate:0.78,pitch:3.0}
+  };
+  try{
+    const res=await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${key}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+    });
+    const j=await res.json();
+    if(testOnly)return !!j.audioContent;
+    return j.audioContent?'data:audio/mp3;base64,'+j.audioContent:null;
+  }catch{return null;}
+}
+
+// Play a data URL, returns Promise that resolves when playback ends
+function playAudio(dataUrl){
+  return new Promise(resolve=>{
+    if(!dataUrl){resolve();return;}
+    if(curAudio){curAudio.pause();curAudio.onended=null;curAudio=null;}
+    const a=new Audio(dataUrl);
+    curAudio=a;
+    a.onended=()=>{curAudio=null;resolve();};
+    a.onerror=()=>{curAudio=null;resolve();};
+    a.play().catch(()=>{curAudio=null;resolve();});
+  });
+}
+
+function stopAudio(){
+  if(curAudio){curAudio.pause();curAudio.onended=null;curAudio=null;}
+}
+
+// Speak a phoneme — cached per letter
+// Uses slow-rate keyword with onset extended, repeated twice
+async function speakPhoneme(letter){
+  const ph=PH[letter]; if(!ph) return;
+  if(USE_GOOGLE){
+    const ck='ph_'+letter;
+    if(!CACHE[ck]){
+      // Two fetches with different rates for clarity
+      CACHE[ck]=await gTTSCustom(ph.tts, 0.55, 3.5);
+    }
+    await playAudio(CACHE[ck]);
+  } else {
+    await fbSpeak(ph.kw, 0.42, 1.3);
+  }
+}
+
+// Speak a word — cached
+async function speakWord(word){
+  if(USE_GOOGLE){
+    const ck='w_'+word;
+    if(!CACHE[ck]) CACHE[ck]=await gTTS(word,API_KEY);
+    await playAudio(CACHE[ck]);
+  } else {
+    await fbSpeak(word,0.68,1.2);
+  }
+}
+
+// Speak arbitrary text — NOT cached (for feedback/instructions)
+async function speakText(text){
+  if(USE_GOOGLE){
+    const data=await gTTS(text,API_KEY);
+    await playAudio(data);
+  } else {
+    await fbSpeak(text,0.82,1.2);
+  }
+}
+
+// Google TTS with custom rate/pitch (for phoneme pronunciation)
+async function gTTSCustom(text,rate,pitch){
+  const body={
+    input:{text},
+    voice:{languageCode:'en-GB',name:'en-GB-Wavenet-D',ssmlGender:'FEMALE'},
+    audioConfig:{audioEncoding:'MP3',speakingRate:rate,pitch}
+  };
+  try{
+    const res=await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${API_KEY}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+    });
+    const j=await res.json();
+    return j.audioContent?'data:audio/mp3;base64,'+j.audioContent:null;
+  }catch{return null;}
+}
+
+// Pre-cache all phonemes for unlocked letters (called at session start)
+async function preCachePhonemes(){
+  if(!USE_GOOGLE)return;
+  for(const l of unlockedLetters()){
+    const ck='ph_'+l;
+    if(!CACHE[ck]&&PH[l]){
+      CACHE[ck]=await gTTSCustom(PH[l].tts,0.55,3.5);
+    }
+  }
+}
+
+// Fallback Web Speech — returns Promise resolving on end
+let fbVoice=null;
+(function loadFbVoice(){
+  if(!window.speechSynthesis)return;
+  const pick=()=>{
+    const vs=speechSynthesis.getVoices();
+    const want=['Samantha','Karen','Moira','Tessa','Google UK English Female','Microsoft Zira'];
+    for(const n of want){const v=vs.find(v=>v.name.includes(n));if(v){fbVoice=v;return;}}
+    fbVoice=vs.find(v=>v.lang.startsWith('en'))||vs[0];
+  };
+  pick(); speechSynthesis.onvoiceschanged=pick;
+})();
+
+function fbSpeak(text,rate=0.82,pitch=1.2){
+  return new Promise(resolve=>{
+    if(!window.speechSynthesis){resolve();return;}
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    if(fbVoice)u.voice=fbVoice;
+    u.rate=rate;u.pitch=pitch;u.volume=1;
+    u.onend=()=>resolve();
+    u.onerror=()=>resolve();
+    speechSynthesis.speak(u);
+  });
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ═══════════════════════════════════════════════════
+//  MASTERY  (5 correct hits to master a letter)
+// ═══════════════════════════════════════════════════
+function recordCorrect(letter){
+  ST.letterHits[letter]=(ST.letterHits[letter]||0)+1;
+  const h=ST.letterHits[letter];
+  if(h>=5)ST.letterStatus[letter]='mastered';
+  else if(h>=2)ST.letterStatus[letter]='learning';
+  else ST.letterStatus[letter]='introduced';
+  saveState(); checkUnlock();
+}
+
+function checkUnlock(){
+  const g=ST.unlockedGroup;
+  if(g>=GROUPS.length-1)return;
+  if(GROUPS[g].letters.every(l=>ST.letterStatus[l]==='mastered')){
+    const next=g+1;
+    ST.unlockedGroup=next;
+    GROUPS[next].letters.forEach(l=>{if(!ST.letterStatus[l])ST.letterStatus[l]='introduced';});
+    saveState(); showEvolve(next);
+  }
+}
+
+function unlockedLetters(){
+  const ls=[];
+  for(let g=0;g<=ST.unlockedGroup;g++)GROUPS[g].letters.forEach(l=>ls.push(l));
+  return ls;
+}
+function availWords(){return WORDS.filter(w=>w.g<=ST.unlockedGroup);}
+function availStories(){return STORIES.filter(s=>s.g<=ST.unlockedGroup);}
+
+// ═══════════════════════════════════════════════════
+//  HOME RENDER
+// ═══════════════════════════════════════════════════
+function dinoInfo(){
+  const total=GROUPS.reduce((s,g)=>s+g.letters.length,0);
+  const mastered=Object.values(ST.letterStatus).filter(v=>v==='mastered').length;
+  const pct=Math.round(mastered/total*100);
+  let si=0;
+  for(let i=STAGE_PCT.length-1;i>=0;i--){if(pct>=STAGE_PCT[i]){si=i;break;}}
+  return{pct,si,mastered,total,ds:DINO_STAGES[si]};
+}
+
+function renderHome(){
+  const{pct,ds,mastered,total}=dinoInfo();
+  setOm(document.getElementById('homeDino'),ds.e);
+  document.getElementById('growLbl').textContent=ds.lbl;
+  document.getElementById('growPct').textContent=pct+'%';
+  document.getElementById('growFill').style.width=pct+'%';
+  document.getElementById('growSub').textContent=
+    pct===100?'Giganto is fully grown! ROAR!':`${total-mastered} more letters to master!`;
+
+  // Pills with hit counter dots
+  const el=document.getElementById('pillsEl'); el.innerHTML='';
+  GROUPS.flatMap(g=>g.letters).forEach(l=>{
+    const st=ST.letterStatus[l]||'locked';
+    const hits=ST.letterHits[l]||0;
+    const p=document.createElement('div');
+    p.className=`lpill ${st}`;
+    p.textContent=l.toUpperCase();
+    // Show hit progress as small dots
+    if(st!=='locked'&&st!=='mastered'){
+      const hd=document.createElement('div');
+      hd.className='pill-hits';
+      hd.textContent='●'.repeat(hits)+'○'.repeat(Math.max(0,5-hits));
+      p.appendChild(hd);
+    }
+    if(st!=='locked') p.onclick=()=>speakPhoneme(l);
+    el.appendChild(p);
+  });
+
+  // Lock modes based on available content
+  const wds=availWords();
+  document.getElementById('blendBtn').classList.toggle('locked-mode',wds.length<3);
+  document.getElementById('buildBtn').classList.toggle('locked-mode',wds.length<3);
+  document.getElementById('storyBtn').classList.toggle('locked-mode',availStories().length===0);
+}
+
+// ═══════════════════════════════════════════════════
+//  EVOLVE MODAL
+// ═══════════════════════════════════════════════════
+function showEvolve(gi){
+  const{ds}=dinoInfo();
+  setOm(document.getElementById('modalDino'),ds.e);
+  document.getElementById('modalTitle').textContent=ds.lbl;
+  document.getElementById('modalMsg').textContent=
+    `New letters unlocked: ${GROUPS[gi].letters.map(l=>l.toUpperCase()).join(', ')}`;
+  document.getElementById('evolveModal').classList.add('show');
+  confetti();
+  speakText(`Giganto grew! You unlocked ${GROUPS[gi].letters.join(' and ')}!`);
+}
+function closeModal(){document.getElementById('evolveModal').classList.remove('show');renderHome();}
+
+// ═══════════════════════════════════════════════════
+//  NAV + GAME UTILS
+// ═══════════════════════════════════════════════════
+const TOTAL_Q=5;
+let mode='',score=0,qNum=0,usedIdx=[];
+let fullQ=[],fullStep=0;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goHome(){
+  stopAudio();
+  speechSynthesis&&speechSynthesis.cancel();
+  renderHome();
+  showScreen('homeScreen');
+}
+function go(m){fullQ=[];mode=m;score=0;qNum=0;usedIdx=[];launchMode(m);}
+function startFull(){
+  fullQ=['sound','blend','build','story'];
+  fullStep=0;mode=fullQ[0];score=0;qNum=0;usedIdx=[];
+  launchMode(mode);
+}
+async function launchMode(m){
+  await preCachePhonemes();
+  if(m==='sound')initSound();
+  else if(m==='blend')initBlend();
+  else if(m==='build')initBuild();
+  else if(m==='story')initStory();
+}
+function endMode(){
+  if(fullQ.length&&fullStep<fullQ.length-1){
+    fullStep++;mode=fullQ[fullStep];score=0;qNum=0;usedIdx=[];launchMode(mode);
+  } else showResult();
+}
+function playAgain(){go(mode);}
+
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+// Pick unused index from pool, reset if exhausted
+function pickIdx(poolLen){
+  if(usedIdx.length>=poolLen)usedIdx=[];
+  let idx,t=0;
+  do{idx=Math.floor(Math.random()*poolLen);t++;}while(usedIdx.includes(idx)&&t<200);
+  usedIdx.push(idx);
+  return idx;
+}
+
+function makeDots(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML='';
+  for(let i=0;i<TOTAL_Q;i++){const d=document.createElement('div');d.className='pdot';d.id=id+'d'+i;el.appendChild(d);}
+}
+function updDots(id){
+  for(let i=0;i<TOTAL_Q;i++){
+    const d=document.getElementById(id+'d'+i);if(!d)continue;
+    d.className='pdot'+(i<qNum-1?' done':i===qNum-1?' curr':'');
+  }
+}
+function updScore(id){const el=document.getElementById(id);if(el)el.textContent=`⭐ ${score}`;}
+function disableAll(sel){document.querySelectorAll(sel).forEach(t=>{t.onclick=null;t.classList.add('disabled');});}
+
+function showFb(emoji){
+  const img=document.getElementById('fbImg');
+  img.src=omUrl(emoji);
+  img.style.animation='none';
+  requestAnimationFrame(()=>img.style.animation='fbpop 1s ease forwards');
+  const o=document.getElementById('fb');
+  o.classList.add('show');
+  setTimeout(()=>o.classList.remove('show'),1000);
+}
+
+function setSpk(id,on){const b=document.getElementById(id);if(b)b.classList.toggle('on',on);}
+
+// ═══════════════════════════════════════════════════
+//  SOUND STATION
+//  Flow: Show letter + picture → child taps 🔊 → card hides
+//  → child picks the correct letter from 4 choices
+//  Teaches: seeing a letter → recalling its sound
+// ═══════════════════════════════════════════════════
+let SQ=null; // current sound question
+
+function initSound(){
+  updScore('soundScore');makeDots('soundDots');
+  showScreen('soundScreen');
+  nextSound();
+}
+
+function nextSound(){
+  if(qNum>=TOTAL_Q){endMode();return;}
+  const avail=unlockedLetters();
+  SQ={letter:avail[pickIdx(avail.length)]};
+  SQ.ph=PH[SQ.letter];
+  qNum++;updDots('soundDots');
+
+  // Show letter + keyword — child studies it
+  document.getElementById('soundLetter').textContent=SQ.letter.toUpperCase();
+  setOm(document.getElementById('soundKwImg'),SQ.ph.e);
+  document.getElementById('soundKwLbl').textContent=`…like "${SQ.ph.kw}"`;
+  document.getElementById('lcardOuter').style.opacity='1';
+  document.getElementById('soundHint').textContent='Look at the letter, then tap 🔊 to hear its sound!';
+  document.getElementById('soundSpk').disabled=false;
+
+  // Build 4 choice tiles (but keep them hidden until sound plays)
+  const others=avail.filter(l=>l!==SQ.letter); shuf(others);
+  const choices=[SQ.letter,...others.slice(0,Math.min(3,others.length))]; shuf(choices);
+  const box=document.getElementById('soundChoices'); box.innerHTML='';
+  box.style.opacity='0'; // hidden until sound plays
+  choices.forEach(l=>{
+    const ph=PH[l];
+    const t=document.createElement('div'); t.className='ltile'; t.dataset.letter=l;
+    const lb=document.createElement('div'); lb.className='lL'; lb.textContent=l.toUpperCase();
+    const img=document.createElement('img'); img.src=omUrl(ph.e); img.width=40; img.height=40;
+    t.appendChild(lb); t.appendChild(img);
+    t.onclick=()=>ansSound(t,l===SQ.letter);
+    box.appendChild(t);
+  });
+
+  // Auto-play after a moment to let child see the letter
+  setTimeout(()=>soundSpeak(),700);
+}
+
+async function soundSpeak(){
+  document.getElementById('soundSpk').disabled=true;
+  setSpk('soundSpk',true);
+
+  // Let child see the letter for 600ms, then hide it
+  await delay(600);
+  document.getElementById('lcardOuter').style.opacity='0';
+  document.getElementById('soundHint').textContent='Now find that letter!';
+  document.getElementById('soundChoices').style.opacity='1';
+
+  // Play phoneme sound
+  await speakPhoneme(SQ.letter);
+  await delay(300);
+  // Play again for clarity
+  await speakPhoneme(SQ.letter);
+
+  setSpk('soundSpk',false);
+  document.getElementById('soundSpk').disabled=false;
+}
+
+async function ansSound(tile,correct){
+  disableAll('#soundChoices .ltile');
+  document.getElementById('lcardOuter').style.opacity='1'; // reveal
+  document.getElementById('soundSpk').disabled=true;
+
+  if(correct){
+    tile.classList.add('correct'); score++; updScore('soundScore');
+    recordCorrect(SQ.letter); showFb('⭐');
+    await speakText(`Yes! ${SQ.letter.toUpperCase()} is for ${SQ.ph.kw}!`);
+  } else {
+    tile.classList.add('wrong'); showFb('💪');
+    document.querySelectorAll('#soundChoices .ltile').forEach(t=>{
+      if(t.dataset.letter===SQ.letter)t.classList.add('correct');
+    });
+    await speakText(`Good try! ${SQ.letter.toUpperCase()} is for ${SQ.ph.kw}!`);
+  }
+  setTimeout(nextSound,1800);
+}
+
+// ═══════════════════════════════════════════════════
+//  BLEND — hear phonemes → pick picture
+//  Audio sequences properly using await
+//  No audio hints on picture tiles
+// ═══════════════════════════════════════════════════
+let BQ=null, bPlaying=false;
+
+function initBlend(){
+  updScore('blendScore');makeDots('blendDots');
+  showScreen('blendScreen');
+  nextBlend();
+}
+
+function nextBlend(){
+  if(qNum>=TOTAL_Q){endMode();return;}
+  const avail=availWords();
+  if(avail.length<3){endMode();return;}
+
+  BQ=avail[pickIdx(avail.length)];
+  qNum++;updDots('blendDots');
+  bPlaying=false;
+
+  const btn=document.getElementById('blendSpk'); btn.disabled=false;
+
+  // Letter boxes
+  const bx=document.getElementById('blendBoxes'); bx.innerHTML='';
+  BQ.w.split('').forEach((ch,i)=>{
+    const b=document.createElement('div'); b.className='bbox'; b.textContent=ch.toUpperCase();
+    bx.appendChild(b);
+    setTimeout(()=>b.classList.add('show'),i*110+80);
+  });
+
+  // 4 picture tiles — pure picture, NO audio hints, NO labels
+  const others=avail.filter(w=>w.w!==BQ.w); shuf(others);
+  const pool=[BQ,...others.slice(0,Math.min(3,others.length))]; shuf(pool);
+  const cb=document.getElementById('blendChoices'); cb.innerHTML='';
+  pool.forEach(w=>{
+    const t=document.createElement('div'); t.className='ptile'; t.dataset.word=w.w;
+    const img=document.createElement('img'); img.src=omUrl(w.e); img.width=55; img.height=55;
+    t.appendChild(img); t.onclick=()=>ansBlend(t,w.w===BQ.w,w);
+    cb.appendChild(t);
+  });
+
+  setTimeout(()=>blendSpeak(),500);
+}
+
+async function blendSpeak(){
+  if(bPlaying)return;
+  bPlaying=true;
+  const btn=document.getElementById('blendSpk');
+  btn.disabled=true; setSpk('blendSpk',true);
+  const tiles=document.querySelectorAll('.bbox');
+  tiles.forEach(t=>t.classList.remove('lit'));
+
+  // Instruction — awaited so it finishes before sounds start
+  await speakText('Listen!');
+  await delay(300);
+
+  // Each phoneme: light up tile, play sound, wait for sound to finish, then next
+  for(let i=0;i<BQ.s.length;i++){
+    tiles.forEach(t=>t.classList.remove('lit'));
+    if(tiles[i])tiles[i].classList.add('lit');
+    await speakPhoneme(BQ.s[i]);
+    await delay(400); // small gap between sounds
+  }
+
+  // Clear, pause, then say full word
+  tiles.forEach(t=>t.classList.remove('lit'));
+  await delay(500);
+  await speakWord(BQ.w);
+
+  bPlaying=false;
+  btn.disabled=false; setSpk('blendSpk',false);
+}
+
+async function ansBlend(tile,correct,w){
+  stopAudio();
+  bPlaying=false;
+  disableAll('#blendChoices .ptile');
+
+  if(correct){
+    tile.classList.add('correct'); score++; updScore('blendScore');
+    showFb('🎉');
+    await speakText(`Yes! ${BQ.w}!`);
+  } else {
+    tile.classList.add('wrong'); showFb('💪');
+    document.querySelectorAll('#blendChoices .ptile').forEach(t=>{
+      if(t.dataset.word===BQ.w)t.classList.add('correct');
+    });
+    await speakText(`Good try! The word was ${BQ.w}!`);
+  }
+  setTimeout(nextBlend,1800);
+}
+
+// ═══════════════════════════════════════════════════
+//  WORD BUILDER — hear word → tap letters in order
+//  Replaces Rhyme Time — more concrete, directly teaches blending
+//  Child hears the word, sees the picture, taps L-E-T-T-E-R-S in sequence
+// ═══════════════════════════════════════════════════
+let WBQ=null, wbProgress=0; // wbProgress = how many letters correctly placed so far
+
+function initBuild(){
+  updScore('buildScore');makeDots('buildDots');
+  showScreen('buildScreen');
+  nextBuild();
+}
+
+function nextBuild(){
+  if(qNum>=TOTAL_Q){endMode();return;}
+  const avail=availWords().filter(w=>w.w.length===3); // only 3-letter words for clarity
+  if(avail.length<2){endMode();return;}
+
+  WBQ=avail[pickIdx(avail.length)];
+  wbProgress=0;
+  qNum++;updDots('buildDots');
+
+  // Show target picture
+  setOm(document.getElementById('buildImg'),WBQ.e);
+
+  // Render empty slots
+  renderWbSlots();
+
+  // Letter choices: correct letters + 2-3 distractors
+  const allLetters=unlockedLetters();
+  const correct=WBQ.s; // e.g. ['c','a','t']
+  const distractors=allLetters.filter(l=>!correct.includes(l));
+  shuf(distractors);
+  // Show all 3 correct letters + up to 3 distractors, shuffled
+  const choicePool=[...correct,...distractors.slice(0,3)]; shuf(choicePool);
+
+  const box=document.getElementById('buildChoices'); box.innerHTML='';
+  choicePool.forEach(l=>{
+    const ph=PH[l];
+    const t=document.createElement('div'); t.className='wbtile'; t.dataset.letter=l;
+    const lb=document.createElement('div'); lb.className='wbL'; lb.textContent=l.toUpperCase();
+    const img=document.createElement('img'); img.src=omUrl(ph?ph.e:'❓'); img.width=38; img.height=38;
+    t.appendChild(lb); t.appendChild(img);
+    t.onclick=()=>tapBuildLetter(t,l);
+    box.appendChild(t);
+  });
+
+  // Auto-play the word
+  setTimeout(()=>buildSpeak(),500);
+}
+
+function renderWbSlots(){
+  const slots=document.getElementById('wbSlots'); slots.innerHTML='';
+  WBQ.s.forEach((l,i)=>{
+    const s=document.createElement('div');
+    s.className='wbslot'+(i<wbProgress?' filled':'');
+    s.id='wbslot'+i;
+    if(i<wbProgress)s.textContent=WBQ.s[i].toUpperCase();
+    slots.appendChild(s);
+  });
+}
+
+async function buildSpeak(){
+  const btn=document.getElementById('buildSpk');
+  btn.disabled=true; setSpk('buildSpk',true);
+  await speakText('What word is this?');
+  await delay(200);
+  await speakWord(WBQ.w);
+  btn.disabled=false; setSpk('buildSpk',false);
+}
+
+async function tapBuildLetter(tile,letter){
+  const expected=WBQ.s[wbProgress];
+
+  if(letter===expected){
+    // Correct letter for this position
+    tile.classList.add('selected','disabled');
+    tile.onclick=null;
+    wbProgress++;
+
+    // Fill the slot
+    const slot=document.getElementById('wbslot'+(wbProgress-1));
+    if(slot){slot.textContent=letter.toUpperCase();slot.classList.add('filled','correct-slot');}
+
+    // Play the phoneme for this letter
+    await speakPhoneme(letter);
+
+    if(wbProgress>=WBQ.s.length){
+      // Word complete!
+      score++; updScore('buildScore');
+      showFb('⭐');
+      await delay(200);
+      await speakText(`Yes! ${WBQ.w}!`);
+      await speakWord(WBQ.w);
+      setTimeout(nextBuild,2000);
+    }
+  } else {
+    // Wrong letter
+    tile.classList.add('wrong');
+    setTimeout(()=>tile.classList.remove('wrong'),500);
+    showFb('💪');
+    // Hint: play the expected phoneme again
+    await delay(300);
+    await speakPhoneme(expected);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  STORY
+// ═══════════════════════════════════════════════════
+let curStory=null, pageIdx=0;
+
+function initStory(){
+  const avail=availStories();
+  if(!avail.length){goHome();return;}
+  curStory=avail[Math.floor(Math.random()*avail.length)];
+  pageIdx=0;
+  showScreen('storyScreen');
+  document.getElementById('storyTitle').textContent=`📖 ${curStory.title}`;
+  renderPage();
+  setTimeout(()=>speakText(`Let's read! ${curStory.title}`),400);
+}
+
+function renderPage(){
+  const p=curStory.pages[pageIdx];
+  const pics=document.getElementById('storyPics'); pics.innerHTML='';
+  p.pics.forEach(em=>{
+    const img=document.createElement('img');
+    img.src=omUrl(em); img.width=62; img.height=62;
+    pics.appendChild(img);
+  });
+  document.getElementById('storyPill').textContent=`${pageIdx+1}/${curStory.pages.length}`;
+  document.getElementById('prevBtn').style.opacity=pageIdx===0?'0.28':'1';
+  document.getElementById('nextBtn').textContent=
+    pageIdx===curStory.pages.length-1?'Done ✓':'Next →';
+
+  const tx=document.getElementById('storyText'); tx.innerHTML='';
+  p.text.split(/\s+/).forEach(raw=>{
+    const clean=raw.replace(/[^a-zA-Z']/g,'');
+    if(!clean){tx.appendChild(document.createTextNode(' '));return;}
+    const sp=document.createElement('span'); sp.className='sword';
+    sp.textContent=raw+' ';
+    sp.onclick=()=>{sp.classList.add('lit');speakWord(clean);setTimeout(()=>sp.classList.remove('lit'),800);};
+    tx.appendChild(sp);
+  });
+}
+
+async function readPage(){
+  await speakText(curStory.pages[pageIdx].text);
+}
+
+function storyNav(dir){
+  pageIdx+=dir;
+  if(pageIdx<0){pageIdx=0;return;}
+  if(pageIdx>=curStory.pages.length){endMode();return;}
+  renderPage();
+  setTimeout(readPage,350);
+}
+
+// ═══════════════════════════════════════════════════
+//  RESULT
+// ═══════════════════════════════════════════════════
+async function showResult(){
+  renderHome();
+  const isStory=mode==='story';
+  const pct=isStory?1:score/TOTAL_Q;
+  let d='🦖',title='Roar! Amazing!',stars='⭐⭐⭐';
+  if(!isStory){
+    if(pct<0.4){d='🥚';title='Keep trying!';stars='⭐';}
+    else if(pct<0.7){d='🐣';title='Well done!';stars='⭐⭐';}
+  }
+  setOm(document.getElementById('rDino'),d);
+  document.getElementById('rTitle').textContent=title;
+  document.getElementById('rStars').textContent=stars;
+  document.getElementById('rSub').textContent=
+    isStory?'Giganto loved that story!':`You got ${score} out of ${TOTAL_Q}!`;
+  showScreen('resultScreen');
+  if(pct>=0.6||isStory)confetti();
+  await speakText(`${title} ${isStory?'Great reading!':`You got ${score} out of ${TOTAL_Q}!`}`);
+}
+
+// ═══════════════════════════════════════════════════
+//  CONFETTI
+// ═══════════════════════════════════════════════════
+function confetti(){
+  const wrap=document.getElementById('cfWrap'); wrap.innerHTML='';
+  const items=['🦖','⭐','🌟','🎉','💫','🥳','🌿','🏆','🥚','🐣'];
+  items.forEach(em=>{
+    for(let i=0;i<3;i++){
+      const el=document.createElement('div'); el.className='cfp';
+      const img=document.createElement('img'); img.src=omUrl(em); img.width=26; img.height=26;
+      el.appendChild(img);
+      el.style.left=Math.random()*100+'vw';
+      el.style.animationDuration=(1.3+Math.random()*2)+'s';
+      el.style.animationDelay=Math.random()*.9+'s';
+      wrap.appendChild(el);
+      el.addEventListener('animationend',()=>el.remove());
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+loadState();
+if(API_KEY){showScreen('homeScreen');renderHome();}
+else showScreen('setupScreen');
+</script>
+<div style="position:fixed;bottom:2px;right:4px;font-size:.48rem;color:rgba(0,0,0,.22);z-index:10;">Icons: <a href="https://openmoji.org" style="color:inherit;">OpenMoji</a> CC BY-SA 4.0</div>
+</body>
+</html>
